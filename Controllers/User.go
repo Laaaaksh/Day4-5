@@ -1,4 +1,5 @@
 package Controllers
+
 import (
 	"Day4-5/Models"
 	"fmt"
@@ -12,6 +13,7 @@ func GetProduct(c *gin.Context) {
 	if err != nil {
 		c.AbortWithStatus(http.StatusNotFound)
 	} else {
+		//Models.OrderUpdate()
 		c.JSON(http.StatusOK, product)
 	}
 }
