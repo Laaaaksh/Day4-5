@@ -16,7 +16,7 @@ func SetupRouter() *gin.Engine {
 	}
 	grp2 := r.Group("/transaction-api")
 	{
-		grp2.GET("transaction", Controllers.GetTransaction)
+		grp2.GET("transaction", Controllers.GetAllTransaction)
 		grp2.POST("transaction", Controllers.CreateTransaction)
 		grp2.GET("transaction/:id", Controllers.GetTransactionByID)
 		grp2.PUT("transaction/:id", Controllers.UpdateTransaction)

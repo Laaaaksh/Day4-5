@@ -1,10 +1,24 @@
 package Models
+
 import (
 	"Day4-5/Config"
 	"fmt"
-	_ "github.com/go-sql-driver/mysql"
+	"time"
 )
 
+// Authentication Of User
+
+func AuthUser(username string, pass string) error{
+	var user User
+	if err:= Config.DB.Where("user_name = ?", username). Find(&user).Error; err != nil{
+		return fmt.Errorf("user not found")
+	}
+	if pass == user.Password {
+		return nil
+	} else {
+		return fmt.Errorf("incorrect password")
+	}
+}
 func GetAllProduct(product *[]Product) (err error) {
 	if err = Config.DB.Find(product).Error; err != nil {
 		return err
@@ -39,17 +53,38 @@ func DeleteProduct(product *Product, id string) (err error) {
 }
 
 // Transactions Begin Here
-func GetAllTransaction(transaction *[]Transaction) (err error) {
+func GetAllTransaction(transaction *[]Transaction, username string) (err error) {
 	if err = Config.DB.Find(transaction).Error; err != nil {
 		return err
 	}
 	return nil
 }
 
-func CreateTransaction(transaction *Transaction) (err error) {
+func CreateTransaction(transaction *Transaction, username string) (err error) {
+
+	var Prod Product
+	var PrevTran Transaction
+
+	Config.DB.Where( "user_name", username).Last(&PrevTran)
+
+	if PrevTran.Id != 0{
+		currentTime := time.Now().Unix()
+		if (currentTime - PrevTran.OrderTime) < 300 {
+			err := fmt.Errorf("please try again after %d minutes", 5 - (currentTime - PrevTran.OrderTime)/60)
+			//fmt.Println(err)
+			return err
+		}
+	}
 	if err = Config.DB.Create(transaction).Error; err != nil {
 		return err
 	}
+	if Prod.Quantity < transaction.Quantity {
+		Config.DB.Model(transaction).Updates(Transaction{Status: "Failed", Amount: Prod.Price * float32(transaction.Quantity), OrderTime: time.Now().Unix(), UserName: username})
+		return fmt.Errorf("out of stock")
+	}
+		Config.DB.Model(Prod).Update("Quantity", Prod.Quantity-transaction.Quantity)
+		Config.DB.Model(transaction).Update(Transaction{Status: "Placed", Amount: Prod.Price * float32(transaction.Quantity), OrderTime: time.Now().Unix(), UserName: username})
+
 	return nil
 }
 
